@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Organizational Events Notifier - EventBridge Rule
+
+Parameters:
+  EventBusDestinationAccount:
+    Description: ID of AWS account containing the destination EventBridge event bus
+    Type: String
+  EventBusDestinationRegion:
+    Description: Name of AWS region containing the destination EventBridge event bus in the destination account
+    Type: String
+    Default: us-east-1
+  EventBusName:
+    Description: Name of the EventBridge event bus in the destination account
+    Type: String
+    Default: CrossAccountDestinationBus
+  MonitoredEvents:
+    Description: "Comma-delimited list of events names (for example: RedeemPromoCode,CreateSecurityGroup)"
+    Type: CommaDelimitedList
+
+
+Resources:
+  EventRule:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Description: !Sub Routes to event bus ${EventBusName} in ${EventBusDestinationRegion} region in ${EventBusDestinationAccount} account
+      EventBusName: default
+      State: ENABLED
+      EventPattern:
+        detail:
+          eventName: !Ref MonitoredEvents
+      Targets:
+        - Arn: !Sub arn:aws:events:${EventBusDestinationRegion}:${EventBusDestinationAccount}:event-bus/${EventBusName}
+          Id: !Ref EventBusName
+          RoleArn: !GetAtt
+            - EventBridgeIAMrole
+            - Arn
+  EventBridgeIAMrole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: PutEventsDestinationBus
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'events:PutEvents'
+                Resource:
+                  - !Sub arn:aws:events:${EventBusDestinationRegion}:${EventBusDestinationAccount}:event-bus/${EventBusName}
