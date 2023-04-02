@@ -63,14 +63,12 @@ resource "aws_iam_role" "lambda_role" {
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
 }
 
-
 resource "aws_cloudwatch_event_target" "lambda" {
   rule           = aws_cloudwatch_event_rule.all.name
   event_bus_name = aws_cloudwatch_event_bus.cross_account.name
   target_id      = "SendToLambda"
   arn            = aws_lambda_function.lambda_function.arn
 }
-
 
 data "aws_iam_policy_document" "lambda_policy" {
   statement {
