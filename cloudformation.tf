@@ -15,7 +15,6 @@ resource "aws_cloudformation_stack_set" "eventbridge_rule" {
     EventBusDestinationAccount = data.aws_caller_identity.current.account_id
     EventBusDestinationRegion  = var.aws_region
     EventBusName               = "CrossAccountDestinationBus"
-    MonitoredEvents            = join(",", var.monitored_events)
   }
 
   operation_preferences {

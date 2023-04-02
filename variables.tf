@@ -21,7 +21,7 @@ variable "default_tags" {
 variable "project_name" {
   description = "Name of the tool/project"
   type        = string
-  default     = "organizational-events-notifier"
+  default     = "SCP-organizational-events-notifier"
 }
 
 variable "create_cloudtrail_trail" {
@@ -33,7 +33,7 @@ variable "create_cloudtrail_trail" {
 variable "cloudtrail_trail_name" {
   description = "Name of the management-events CloudTrail Trail to create"
   type        = string
-  default     = "management-events"
+  default     = "SCP-management-events"
 }
 
 variable "deploy_to_organization" {
@@ -48,12 +48,43 @@ variable "include_organizational_units" {
   default     = []
 }
 
-variable "monitored_events" {
-  description = "List of AWS events that should be monitored across the organization (for example: `RedeemPromoCode`)"
-  type        = list(string)
+
+# Function variables
+variable "function_name" {
+  description = "Name of the Lambda function"
+  type        = string
+  default = "scp-event-notifier"
+}
+variable "function_description" {
+  description = "Description of the Lambda function"
+  type        = string
+  default = "Lambda function to notify user when SCP blocks action"
+}
+variable "function_timeout" {
+  description = "The amount of time your Lambda Function has to run in seconds"
+  type        = number
+  default = 60
+}
+variable "function_mem" {
+  type        = number
+  description = "Lambda function memory size"
+  default = 128
+}
+variable "script_name" {
+  type        = string
+  description = "name of the python script"
+  default = "scp-event-notifier"
 }
 
-variable "email_recipients" {
-  description = "List of email addresses that should receive alerts for the monitored events"
-  type        = list(string)
+variable "lambda_environment_variables" {
+  type = map(string)
+  default = {
+    SES_SOURCE = "naor@terasky.com"
+  }
+}
+
+variable "log_group_retention" {
+  description = "CloudWatch log group retention days"
+  type        = number
+  default = 0
 }

@@ -13,10 +13,6 @@ Parameters:
     Description: Name of the EventBridge event bus in the destination account
     Type: String
     Default: CrossAccountDestinationBus
-  MonitoredEvents:
-    Description: "Comma-delimited list of events names (for example: RedeemPromoCode,CreateSecurityGroup)"
-    Type: CommaDelimitedList
-
 
 Resources:
   EventRule:
@@ -27,13 +23,15 @@ Resources:
       State: ENABLED
       EventPattern:
         detail:
-          eventName: !Ref MonitoredEvents
+          errorCode:
+            - "AccessDenied"
       Targets:
         - Arn: !Sub arn:aws:events:${EventBusDestinationRegion}:${EventBusDestinationAccount}:event-bus/${EventBusName}
           Id: !Ref EventBusName
           RoleArn: !GetAtt
             - EventBridgeIAMrole
             - Arn
+            
   EventBridgeIAMrole:
     Type: 'AWS::IAM::Role'
     Properties:

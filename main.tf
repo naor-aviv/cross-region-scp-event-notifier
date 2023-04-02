@@ -39,40 +39,73 @@ resource "aws_cloudwatch_event_rule" "all" {
   })
 }
 
-resource "aws_cloudwatch_event_target" "sns" {
-  rule           = aws_cloudwatch_event_rule.all.name
-  event_bus_name = aws_cloudwatch_event_bus.cross_account.name
-  target_id      = "SendToSNS"
-  arn            = aws_sns_topic.this.arn
-}
+# Create Lambda
+resource "aws_lambda_function" "lambda_function" {
+  function_name = var.function_name
+  description   = var.function_description
+  runtime       = "python3.9"
+  memory_size   = var.function_mem
+  handler       = "${var.script_name}.lambda_handler"
+  timeout       = var.function_timeout
+  role          = aws_iam_role.lambda_role.arn
+  s3_bucket     = module.lambda_s3_bucket.s3_bucket_id
+  s3_key        = "${var.script_name}.zip"
 
-resource "aws_sns_topic" "this" {
-  name = var.project_name
-}
-
-resource "aws_sns_topic_policy" "default" {
-  arn    = aws_sns_topic.this.arn
-  policy = data.aws_iam_policy_document.sns_topic_policy.json
-}
-
-data "aws_iam_policy_document" "sns_topic_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["SNS:Publish"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["events.amazonaws.com"]
+  environment {
+    variables = {
+      for key, value in var.lambda_environment_variables : key => value
     }
-
-    resources = [aws_sns_topic.this.arn]
   }
 }
 
-resource "aws_sns_topic_subscription" "email" {
-  for_each = toset(var.email_recipients)
-
-  topic_arn = aws_sns_topic.this.arn
-  protocol  = "email"
-  endpoint  = each.key
+resource "aws_iam_role" "lambda_role" {
+  name               = "${var.function_name}-role"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
 }
+
+
+resource "aws_cloudwatch_event_target" "lambda" {
+  rule           = aws_cloudwatch_event_rule.all.name
+  event_bus_name = aws_cloudwatch_event_bus.cross_account.name
+  target_id      = "SendToLambda"
+  arn            = aws_lambda_function.lambda_function.arn
+}
+
+
+data "aws_iam_policy_document" "lambda_policy" {
+  statement {
+    actions   = ["logs:CreateLogStream", "logs:CreateLogGroup", "logs:PutLogEvents"]
+    resources = [aws_cloudwatch_log_group.log_group.arn]
+    effect = "Allow"
+  }
+  statement {
+    actions   = ["ses:*"]
+    resources = ["*"]
+    effect = "Allow"
+  }
+}
+
+data "aws_iam_policy_document" "lambda_assume_role_policy" {
+  statement {
+    actions   = ["sts:AssumeRole"]
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+data "archive_file" "python_zip" {
+  type        = "zip"
+  source_file = "${var.script_name}.py"
+  output_file_mode = "0666"
+  output_path = "${var.script_name}.zip"
+}
+
+# Create Lambda log group
+resource "aws_cloudwatch_log_group" "log_group" {
+  name              = "/aws/lambda/${var.function_name}"
+  retention_in_days = var.log_group_retention
+}
+
