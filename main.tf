@@ -60,7 +60,11 @@ module "lambda_function" {
   
   store_on_s3 = true
   s3_bucket = module.lambda_s3_bucket.s3_bucket_id
-  s3_existing_package = "${var.script_name}.zip"
+  s3_existing_package = {
+    bucket     = module.lambda_s3_bucket.s3_bucket_id
+    key        = "${var.script_name}.zip"
+    version_id = null
+    }
 
   environment_variables = {
     for key, value in var.lambda_environment_variables : key => value
