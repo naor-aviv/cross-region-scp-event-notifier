@@ -32,7 +32,7 @@ resource "null_resource" "copy_python" {
 }
 
 resource "aws_s3_object" "lambda_package" {
-  bucket = module.lambda_s3_bucket[0].s3_bucket_id
+  bucket = module.lambda_s3_bucket.s3_bucket_id
   key    = "${var.script_name}.zip"
   source = "./${var.script_name}.zip"
 }
