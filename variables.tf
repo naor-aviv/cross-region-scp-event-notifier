@@ -24,28 +24,16 @@ variable "project_name" {
   default     = "SCP-organizational-events-notifier"
 }
 
-variable "create_cloudtrail_trail" {
-  description = "Whether to create a new Cloudtrail Trail (and S3 bucket) to store manamgenet events. Choose false if you already have one."
-  type        = bool
-  default     = false
-}
-
-variable "cloudtrail_trail_name" {
-  description = "Name of the management-events CloudTrail Trail to create"
-  type        = string
-  default     = "SCP-management-events"
-}
-
 variable "deploy_to_organization" {
   description = "Whether to deploy the automation to the main OU of the organization (all AWS accounts in the organization)"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "include_organizational_units" {
   description = "List of AWS organizational unit IDs to include and deploy the automation to (if `deploy_to_organization` is set to `false`)"
   type        = list(string)
-  default     = []
+  default     = ["ou-s8qf-092b7iur"]
 }
 
 
