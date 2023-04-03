@@ -41,7 +41,7 @@ variable "include_organizational_units" {
 variable "function_name" {
   description = "Name of the Lambda function"
   type        = string
-  default = "scp-Cross-event-notifier"
+  default = "scp-cross-event-notifier"
 }
 variable "function_description" {
   description = "Description of the Lambda function"
