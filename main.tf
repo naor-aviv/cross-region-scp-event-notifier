@@ -39,9 +39,16 @@ resource "aws_cloudwatch_event_rule" "all" {
   })
 }
 
+resource "aws_cloudwatch_event_target" "lambda" {
+  rule           = aws_cloudwatch_event_rule.all.name
+  event_bus_name = aws_cloudwatch_event_bus.cross_account.name
+  target_id      = "SendToLambda"
+  arn            = module.lambda_function.lambda_function_arn
+}
+
 
 ##########################################
-# Lambda Function (with various triggers)
+#           Lambda Function 
 ##########################################
 
 module "lambda_function" {
@@ -76,35 +83,19 @@ module "lambda_function" {
     }
   }
 }
-/* # Create Lambda
-resource "aws_lambda_function" "lambda_function" {
-  function_name = var.function_name
-  description   = var.function_description
-  runtime       = "python3.9"
-  memory_size   = var.function_mem
-  handler       = "${var.script_name}.lambda_handler"
-  timeout       = var.function_timeout
-  role          = aws_iam_role.lambda_role.arn
-  s3_bucket     = module.lambda_s3_bucket.s3_bucket_id
-  s3_key        = "${var.script_name}.zip"
 
-  environment {
-    variables = {
-      for key, value in var.lambda_environment_variables : key => value
-    }
-  }
-} */
-
+##########################################
+#  Lambda Function Roles and Permissions
+##########################################
 resource "aws_iam_role" "lambda_role" {
   name               = "${var.function_name}-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
 }
 
-resource "aws_cloudwatch_event_target" "lambda" {
-  rule           = aws_cloudwatch_event_rule.all.name
-  event_bus_name = aws_cloudwatch_event_bus.cross_account.name
-  target_id      = "SendToLambda"
-  arn            = module.lambda_function.lambda_function_arn
+resource "aws_iam_role_policy" "lambda_policy" {
+  name   = "${var.function_name}-policy"
+  role   = aws_iam_role.lambda_role.id
+  policy = data.aws_iam_policy_document.lambda_policy.json
 }
 
 data "aws_iam_policy_document" "lambda_policy" {
