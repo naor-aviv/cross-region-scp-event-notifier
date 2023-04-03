@@ -58,7 +58,7 @@ module "lambda_function" {
   create_role = false
   lambda_role = aws_iam_role.lambda_role.arn
   
-  #s3_bucket = module.lambda_s3_bucket.s3_bucket_id
+  create_package = false
   s3_existing_package = {
     bucket     = module.lambda_s3_bucket.s3_bucket_id
     key        = "${var.script_name}.zip"
