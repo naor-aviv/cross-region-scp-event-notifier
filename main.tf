@@ -48,7 +48,7 @@ resource "aws_lambda_function" "lambda_function" {
   handler       = "${var.script_name}.lambda_handler"
   timeout       = var.function_timeout
   role          = aws_iam_role.lambda_role.arn
-  s3_bucket     = module.lambda_s3_bucket.s3_bucket_id
+  s3_bucket     = module.lambda_s3_bucket[0].s3_bucket_id
   s3_key        = "${var.script_name}.zip"
 
   environment {
