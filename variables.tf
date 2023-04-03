@@ -61,7 +61,7 @@ variable "function_mem" {
 variable "script_name" {
   type        = string
   description = "name of the python script"
-  default = "scp-Cross-event-notifier"
+  default = "scp-cross-event-notifier"
 }
 
 variable "lambda_environment_variables" {
