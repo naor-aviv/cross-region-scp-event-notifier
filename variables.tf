@@ -41,7 +41,7 @@ variable "include_organizational_units" {
 variable "function_name" {
   description = "Name of the Lambda function"
   type        = string
-  default = "scp-event-notifier"
+  default = "scp-Cross-event-notifier"
 }
 variable "function_description" {
   description = "Description of the Lambda function"
@@ -61,7 +61,7 @@ variable "function_mem" {
 variable "script_name" {
   type        = string
   description = "name of the python script"
-  default = "scp-event-notifier"
+  default = "scp-Cross-event-notifier"
 }
 
 variable "lambda_environment_variables" {
