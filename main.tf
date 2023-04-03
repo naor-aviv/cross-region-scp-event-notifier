@@ -39,7 +39,41 @@ resource "aws_cloudwatch_event_rule" "all" {
   })
 }
 
-# Create Lambda
+
+##########################################
+# Lambda Function (with various triggers)
+##########################################
+
+module "lambda_function" {
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "~> 4.12.0"
+
+  function_name = var.function_name
+  description   = var.function_description
+  handler       = "${var.script_name}.lambda_handler"
+  runtime       = "python3.9"
+  publish       = true
+  timeout       = var.function_timeout
+
+  create_role = false
+  lambda_role = aws_iam_role.lambda_role.arn
+  
+  store_on_s3 = true
+  s3_bucket = module.lambda_s3_bucket.s3_bucket_id
+  s3_existing_package = "${var.script_name}.zip"
+
+  environment_variables = {
+    for key, value in var.lambda_environment_variables : key => value
+  }
+
+  allowed_triggers = {
+    MainEventRule = {
+      principal  = "events.amazonaws.com"
+      source_arn = aws_cloudwatch_event_rule.all.arn
+    }
+  }
+}
+/* # Create Lambda
 resource "aws_lambda_function" "lambda_function" {
   function_name = var.function_name
   description   = var.function_description
@@ -56,7 +90,7 @@ resource "aws_lambda_function" "lambda_function" {
       for key, value in var.lambda_environment_variables : key => value
     }
   }
-}
+} */
 
 resource "aws_iam_role" "lambda_role" {
   name               = "${var.function_name}-role"
@@ -67,7 +101,7 @@ resource "aws_cloudwatch_event_target" "lambda" {
   rule           = aws_cloudwatch_event_rule.all.name
   event_bus_name = aws_cloudwatch_event_bus.cross_account.name
   target_id      = "SendToLambda"
-  arn            = aws_lambda_function.lambda_function.arn
+  arn            = module.lambda_function.lambda_function_arn
 }
 
 data "aws_iam_policy_document" "lambda_policy" {
@@ -101,9 +135,9 @@ data "archive_file" "python_zip" {
   output_path = "${var.script_name}.zip"
 }
 
-# Create Lambda log group
+/* # Create Lambda log group
 resource "aws_cloudwatch_log_group" "log_group" {
   name              = "/aws/lambda/${var.function_name}"
   retention_in_days = var.log_group_retention
-}
+} */
 
