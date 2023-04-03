@@ -3,7 +3,6 @@ locals {
 }
 
 module "lambda_s3_bucket" {
-  count = var.create_cloudtrail_trail ? 1 : 0
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "~> 3.6"
 
