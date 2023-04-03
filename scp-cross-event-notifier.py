@@ -33,44 +33,17 @@ def lambda_handler(event, context):
         error_message_mail = event['detail']['userIdentity']['principalId'].split(":")[1]
     except Exception as e:
         error_message_mail = event['detail']['userIdentity']['arn'].split("/")[2]
-    # Get count from S3 file
-    try:
-        bucket_name = os.environ['BUCKET_NAME']
-    except KeyError as e:
-        logger.error(f"Environment variable 'BUCKET_NAME' not set: {e}")
-        return
-    try:
-        s3_object = s3.get_object(Bucket=bucket_name, Key='count.txt')
-        count = int(s3_object['Body'].read().decode("utf-8"))
-    except Exception as e:
-        logger.error(f"Error getting count from S3: {e}")
-        count = 0
-        
-    # Increment count and write to S3 file
-    count += 1
-    try:
-        s3.put_object(Bucket=bucket_name, Key='count.txt', Body=str(count).encode())
-    except Exception as e:
-        logger.error(f"Error writing to S3: {e}")
-    
-    # Update for too much LAMBDA requests
-    if count >= 100:
-        warning_message = {'Subject': {'Data': "Lambda limit"}, 'Body': {'Html': {'Data': f""" <b>WARNING!</b> Your Lambda function ran {count} time this month."""}}}
-        warning_destination = {'ToAddresses': ["naor@terasky.com"]}
-        warning_response = ses.send_email(Source=source_mail, Destination=warning_destination, Message=warning_message)
     
     # Prepare email body
     if 'errorMessage' not in event['detail']:
         mail_body = f"""Failed to perform action "<b>{error_action}</b>" on resource "<b>{error_source}</b>" 
                         with explicit deny in service control policy.<br>
-                        Error code: "<b>{error_code}</b>".<br>
-                        Count: <b>{count}</b>."""
+                        Error code: "<b>{error_code}</b>".<br>"""
     else:
         mail_body = f"""Failed to perform action "<b>{error_action}</b>" on resource "<b>{error_source}</b>" 
                         with explicit deny in service control policy.<br>
                         Resource ARN: "<b>{resource_arn}</b>".<br>
-                        Error code: "<b>{error_code}</b>".<br>
-                        Count: <b>{count}</b>."""
+                        Error code: "<b>{error_code}</b>".<br>"""
                     
     # Send email
     subject = 'Denied action by SCP'
