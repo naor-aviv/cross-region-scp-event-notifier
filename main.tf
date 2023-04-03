@@ -111,7 +111,7 @@ resource "aws_cloudwatch_event_target" "lambda" {
 data "aws_iam_policy_document" "lambda_policy" {
   statement {
     actions   = ["logs:CreateLogStream", "logs:CreateLogGroup", "logs:PutLogEvents"]
-    resources = [aws_cloudwatch_log_group.log_group.arn]
+    resources = [module.lambda_function.lambda_cloudwatch_log_group_arn]
     effect = "Allow"
   }
   statement {
