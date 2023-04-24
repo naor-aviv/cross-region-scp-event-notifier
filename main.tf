@@ -110,9 +110,7 @@ data "aws_iam_policy_document" "lambda_policy" {
     effect = "Allow"
   }
 }
-output "log_group" {
-  value = module.lambda_function.lambda_cloudwatch_log_group_arn
-}
+
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
   statement {
     actions   = ["sts:AssumeRole"]
