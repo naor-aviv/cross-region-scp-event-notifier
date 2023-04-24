@@ -33,17 +33,36 @@ def lambda_handler(event, context):
         error_message_mail = event['detail']['userIdentity']['principalId'].split(":")[1]
     except Exception as e:
         error_message_mail = event['detail']['userIdentity']['arn'].split("/")[2]
-    
+        
+
     # Prepare email body
-    if 'errorMessage' not in event['detail']:
-        mail_body = f"""Failed to perform action "<b>{error_action}</b>" on resource "<b>{error_source}</b>" 
-                        with explicit deny in service control policy.<br>
-                        Error code: "<b>{error_code}</b>".<br>"""
+    if "tag" in error_action:
+        if 'errorMessage' not in event['detail']:
+            mail_body = f"""Failed to perform action "<b>{error_action}</b>" on resource "<b>{error_source}</b>" 
+                            with explicit deny in service control policy.<br>
+                            "<b>{error_message_mail}</b>" is not authorized to perform:"<b>{error_action}</b>".<br>
+                            Error code: "<b>{error_code}</b>".<br>
+                            Our Organization has mandatory tags for AWS resources. Your Resource must has these tags."""
+        else:
+            mail_body = f"""Failed to perform action "<b>{error_action}</b>" on resource "<b>{error_source}</b>" 
+                            with explicit deny in service control policy.<br>
+                            Resource ARN: "<b>{resource_arn}</b>".<br>
+                            "<b>{error_message_mail}</b>" is not authorized to perform:"<b>{error_action}</b>".<br>
+                            Error code: "<b>{error_code}</b>".<br>
+                            Our Organization has mandatory tags for AWS resources. Your Resource must has these tags."""
     else:
-        mail_body = f"""Failed to perform action "<b>{error_action}</b>" on resource "<b>{error_source}</b>" 
-                        with explicit deny in service control policy.<br>
-                        Resource ARN: "<b>{resource_arn}</b>".<br>
-                        Error code: "<b>{error_code}</b>".<br>"""
+        if 'errorMessage' not in event['detail']:
+            mail_body = f"""Failed to perform action "<b>{error_action}</b>" on resource "<b>{error_source}</b>" 
+                            with explicit deny in service control policy.<br>
+                            "<b>{error_message_mail}</b>" is not authorized to perform:"<b>{error_action}</b>".<br>
+                            Error code: "<b>{error_code}</b>".<br>"""
+        else:
+            mail_body = f"""Failed to perform action "<b>{error_action}</b>" on resource "<b>{error_source}</b>" 
+                            with explicit deny in service control policy.<br>
+                            Resource ARN: "<b>{resource_arn}</b>".<br>
+                            "<b>{error_message_mail}</b>" is not authorized to perform:"<b>{error_action}</b>".<br>
+                            Error code: "<b>{error_code}</b>".<br>"""
+
                     
     # Send email
     subject = 'Denied action by SCP'
@@ -53,4 +72,5 @@ def lambda_handler(event, context):
 
     response = ses.send_email(Source=source_mail, Destination=destination, Message=message)
     
+    print(event)
     print(f"Date: {response['ResponseMetadata']['HTTPHeaders']['date']}\nResponse Code: {response['ResponseMetadata']['HTTPStatusCode']}")
