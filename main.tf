@@ -101,7 +101,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
 data "aws_iam_policy_document" "lambda_policy" {
   statement {
     actions   = ["logs:CreateLogStream", "logs:CreateLogGroup", "logs:PutLogEvents"]
-    resources = [module.lambda_function.lambda_cloudwatch_log_group_arn]
+    resources = [module.lambda_function.lambda_cloudwatch_log_group_arn + ":*"]
     effect = "Allow"
   }
   statement {
@@ -110,7 +110,9 @@ data "aws_iam_policy_document" "lambda_policy" {
     effect = "Allow"
   }
 }
-
+output "log_group" {
+  value = module.lambda_function.lambda_cloudwatch_log_group_arn
+}
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
   statement {
     actions   = ["sts:AssumeRole"]
